@@ -9,7 +9,7 @@
 * Leaf
 
 We use Leaf as a data structure because I'm not insane.
-#+BEGIN_SRC python
+#+BEGIN_SRC python :tangle DTLearner.py
 class Leaf(object):
 
     def __init__(self,label):
@@ -21,7 +21,7 @@ class Leaf(object):
 
 * Node
 
-#+BEGIN_SRC python
+#+BEGIN_SRC python :tangle DTLearner.py
 class Node(object):
 
     def __init__(self,value,left,right):
@@ -34,7 +34,7 @@ class Node(object):
 #+END_SRC
 
 
-* RTLearner
+* RTLearner components
 
 ** Init
 
@@ -63,7 +63,7 @@ When this happens, you add the new data and rebuild the decision tree. You might
 Because it makes more sense to not recreate new datasets in memory.
 
  #+NAME: init
- #+BEGIN_SRC python
+ #+BEGIN_SRC python :noweb yes
 def __init__(self, leaf_size):
 
     if leaf_size is None:
@@ -75,8 +75,8 @@ def __init__(self, leaf_size):
 
 
 ** addEvidence
-
-#+BEGIN_SRC python
+#+NAME: addEvidence
+#+BEGIN_SRC python :noweb yes
 def addEvidence(self,dataX,dataY):
      # Take the old data you already have and add the new data to that.
     self.dataX = mergeData(self.dataX, dataX)
@@ -94,49 +94,43 @@ def addEvidence(self,dataX,dataY):
 #+END_SRC
 
 ** buildTree
-#+BEGIN_SRC python
-    def buildTree(self, dataX, dataY):
-        self.tree = build_tree_helper(dataX,dataY)
+#+NAME: buildTree
+#+BEGIN_SRC python :noweb yes
+def buildTree(self, dataX, dataY):
+    self.tree = build_tree_helper(dataX,dataY)
 
 
-    def build_tree_helper(self, dataX, dataY):
+def build_tree_helper(self, dataX, dataY):
+    # TODO check shape of both X andy Y?
+    # Return leaf if:
+    # 1. There is only one element left.
+    # 2. There is less than or equal to the given leaf size elements.
+    # 3. All remaining Y values are the same.
+    if dataX.shape[0] == 1 or dataX.shape[0] <= self.leaf_size or all(dataY[0] == y for y in dataY):
+        yMean = dataY.mean()
+        return Leaf(ymean)
+       # Determine random feature i to split on.
 
-        # TODO check shape of both X andy Y?
-        # Return leaf if:
-        # 1. There is only one element left.
-        # 2. There is less than or equal to the given leaf size elements.
-        # 3. All remaining Y values are the same.
-        if dataX.shape[0] == 1 or dataX.shape[0] <= self.leaf_size or all(dataY[0] == y for y in dataY):
-            yMean = dataY.mean()
-            return Leaf(ymean)
-
-
-
-        # Determine random feature i to split on.
-        i =  np.random.randint(dataX.shape[1])
-
-        # Select 2 random values from ith feature.
-        a = np.random.randint(dataX.shape[0])
-        b = np.random.randint(dataX.shape[0])
-
-        # Take avergage of the 2 randomly selected values.
-        split_value = (dataX[a,i] + dataX[b,i]) / 2
+    i =  np.random.randint(dataX.shape[1])
+     # Select 2 random values from ith feature.
+    a = np.random.randint(dataX.shape[0])
+    b = np.random.randint(dataX.shape[0])
 
 
+    # Take avergage of the 2 randomly selected values.
+    split_value = (dataX[a,i] + dataX[b,i]) / 2
 
-        # Build left tree such that we pass it data that's less than or equal to the split value.
-        # li is a set of boolean values that are true if the condition below is true. Think like Matlab
-        li = dataX[:,i] < split_value
-        left_tree = self.build_tree_helper(dataX[li,:], dataY[li])
-
-        # Build left tree such that we pass it data that's greater than the split value.
-        ri = dataX[:,i] > split_value
-        right_tree = self.build_tree_helper(dataX[ri,:], dataY[ri])
-        
-
-        return Node(value = split_value,
-                    left = left_tree,
-                    right = right_tree)
+    # Build left tree such that we pass it data that's less than or equal to the split value.
+    # li is a set of boolean values that are true if the condition below is true. Think like Matlab
+    li = dataX[:,i] < split_value
+    left_tree = self.build_tree_helper(dataX[li,:], dataY[li])
+    # Build left tree such that we pass it data that's greater than the split value.
+    ri = dataX[:,i] > split_value
+    right_tree = self.build_tree_helper(dataX[ri,:], dataY[ri])
+    
+     return Node(value = split_value,
+                left = left_tree,
+                right = right_tree)
 #+END_SRC
 
 
@@ -145,8 +139,8 @@ def addEvidence(self,dataX,dataY):
 ** Query
 
 questionValue is a pandas data frame.
-
-#+BEGIN_SRC python
+#+NAME: query
+#+BEGIN_SRC python :noweb yes
 def query(self,questions):
 
     # Get a value for each point given.
@@ -180,13 +174,14 @@ def queryHelper(self,node,questionValue):
 
 
 
-
-*** 
-Python 2.7 setup
-#+BEGIN_SRC python
-
+* RTLearner implementation
+#+BEGIN_SRC python :tangle DTLearner.py
 class RTLearner(object):
 
+  <<init>>
+  <<addEvidence>>
+  <<buildTree>>
+  <<query>>
 #+END_SRC
 
 
