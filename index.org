@@ -175,7 +175,7 @@ def queryHelper(self,node,questionValue):
 
 
 * RTLearner implementation
-#+BEGIN_SRC python :tangle DTLearner.py
+#+BEGIN_SRC python :tangle DTLearner.py :noweb yes
 class RTLearner(object):
 
   <<init>>
